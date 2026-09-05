@@ -17,6 +17,7 @@ BOARD_BACKGROUND_COLOR = (0, 0, 0)
 BORDER_COLOR = (93, 216, 228)
 APPLE_COLOR = (255, 0, 0)
 SNAKE_COLOR = (0, 255, 0)
+MISSING_COLOR = (255, 0, 255)   # маркер отсутствующего цвета
 SPEED = 10
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
@@ -27,20 +28,20 @@ clock = pygame.time.Clock()
 class GameObject:
     """Основной класс для объектов"""
 
-    def __init__(self, position=None, body_color=None):
+    def __init__(self, position=None, body_color=MISSING_COLOR):
         self.position = position
         self.body_color = body_color
 
-    def draw(self, surface: pygame.Surface):
-        """Метод для отрисовки, будет переопределен в дочерних объектах"""
+    def draw(self):
+        """Метод для отрисовки, будет переопределен в дочерних объектах."""
         pass
 
     @staticmethod
-    def draw_cell(surface: pygame.Surface, position, color):
+    def draw_cell(position, color):
         """Метод для отрисовки одной клетки игрового поля"""
         rect = pygame.Rect(position, (GRID_SIZE, GRID_SIZE))
-        pygame.draw.rect(surface, color, rect)
-        pygame.draw.rect(surface, BORDER_COLOR, rect, 1)
+        pygame.draw.rect(screen, color, rect)
+        pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
 
 
 class Apple(GameObject):
@@ -57,10 +58,10 @@ class Apple(GameObject):
         y = randint(0, GRID_HEIGHT - 1) * GRID_SIZE
         self.position = (x, y)
 
-    def draw(self, surface: pygame.Surface) -> None:
+    def draw(self) -> None:
         """Метод для отрисовки яблока на игровом поле"""
         if self.position:
-            GameObject.draw_cell(surface, self.position, self.body_color)
+            GameObject.draw_cell(self.position, self.body_color)
 
 
 class Snake(GameObject):
@@ -79,7 +80,7 @@ class Snake(GameObject):
 
     @property
     def get_head_position(self):
-        """Возвращение кординатов головы змейки"""
+        """Возвращение координат головы змейки"""
         return self.positions[0]
 
     def update_direction(self, direction):
@@ -110,23 +111,23 @@ class Snake(GameObject):
             else:
                 self.last = None
 
-    def draw(self, surface: pygame.Surface) -> None:
+    def draw(self) -> None:
         """Отрисовка змейки на игровом поле"""
         # Отрисовка всех сегментов, кроме головы
         for position in self.positions[:-1]:
             rect = pygame.Rect(position, (GRID_SIZE, GRID_SIZE))
-            pygame.draw.rect(surface, self.body_color, rect)
-            pygame.draw.rect(surface, BORDER_COLOR, rect, 1)
+            pygame.draw.rect(screen, self.body_color, rect)
+            pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
 
         # Отрисовка головы
         head_rect = pygame.Rect(self.positions[0], (GRID_SIZE, GRID_SIZE))
-        pygame.draw.rect(surface, self.body_color, head_rect)
-        pygame.draw.rect(surface, BORDER_COLOR, head_rect, 1)
+        pygame.draw.rect(screen, self.body_color, head_rect)
+        pygame.draw.rect(screen, BORDER_COLOR, head_rect, 1)
 
         # Затирание последнего сегмента (если был удалён)
         if self.last is not None:
             last_rect = pygame.Rect(self.last, (GRID_SIZE, GRID_SIZE))
-            pygame.draw.rect(surface, BOARD_BACKGROUND_COLOR, last_rect)
+            pygame.draw.rect(screen, BOARD_BACKGROUND_COLOR, last_rect)
             self.last = None
 
     def reset(self) -> None:
@@ -182,8 +183,8 @@ def main():
                 apple.randomize_position()
 
         screen.fill(BOARD_BACKGROUND_COLOR)
-        snake.draw(screen)
-        apple.draw(screen)
+        snake.draw()
+        apple.draw()
 
         pygame.display.update()
         clock.tick(SPEED)

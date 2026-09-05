@@ -35,7 +35,6 @@ class GameObject:
 
     def draw(self):
         """Метод для отрисовки, будет переопределен в дочерних классах."""
-        
 
     @staticmethod
     def draw_cell(position, color, draw_border=True):
@@ -53,6 +52,7 @@ class Apple(GameObject):
         super().__init__(position, body_color)
 
     def randomize_position(self, occupied_positions):
+        """Генерирует случайную позицию, не занятую змеёй.""" 
         while True:
             x = randint(0, GRID_WIDTH - 1) * GRID_SIZE
             y = randint(0, GRID_HEIGHT - 1) * GRID_SIZE
@@ -109,7 +109,11 @@ class Snake(GameObject):
     def draw(self) -> None:
         """Отрисовка змейки на игровом поле."""
         if self.last is not None:
-            self.draw_cell(self.last, BOARD_BACKGROUND_COLOR, draw_border=False)
+            self.draw_cell(
+                self.last, 
+                BOARD_BACKGROUND_COLOR, 
+                draw_border=False,
+            )
         self.draw_cell(self.get_head_position, self.body_color)
 
     def reset(self) -> None:

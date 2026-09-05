@@ -18,7 +18,7 @@ BOARD_BACKGROUND_COLOR = (0, 0, 0)
 BORDER_COLOR = (93, 216, 228)
 APPLE_COLOR = (255, 0, 0)
 SNAKE_COLOR = (0, 255, 0)
-MISSING_COLOR = (255, 0, 255)   # маркер отсутствующего цвета
+MISSING_COLOR = (255, 0, 255)
 SPEED = 10
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
@@ -35,33 +35,29 @@ class GameObject:
 
     def draw(self):
         """Метод для отрисовки, будет переопределен в дочерних классах."""
-        pass
+        
 
     @staticmethod
-    def draw_cell(position, color):
+    def draw_cell(position, color, draw_border=True):
         """Метод для отрисовки одной клетки игрового поля."""
         rect = pygame.Rect(position, (GRID_SIZE, GRID_SIZE))
         pygame.draw.rect(screen, color, rect)
-        pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
+        if draw_border:
+            pygame.draw.rect(screen, BORDER_COLOR, rect, 1)
 
 
 class Apple(GameObject):
     """Класс для объекта яблока, наследуется от GameObject."""
 
-    def __init__(self, occupied_positions=None, position=None,
-                 body_color=APPLE_COLOR):
+    def __init__(self, position=None, body_color=APPLE_COLOR):
         super().__init__(position, body_color)
-        self.occupied_positions = occupied_positions or []
-        if position is None:
-            self.randomize_position()
 
-    def randomize_position(self) -> None:
-        """Генерирует случайную позицию, не занятую змеёй."""
+    def randomize_position(self, occupied_positions):
         while True:
             x = randint(0, GRID_WIDTH - 1) * GRID_SIZE
             y = randint(0, GRID_HEIGHT - 1) * GRID_SIZE
             new_pos = (x, y)
-            if new_pos not in self.occupied_positions:
+            if new_pos not in occupied_positions:
                 self.position = new_pos
                 break
 
@@ -112,15 +108,9 @@ class Snake(GameObject):
 
     def draw(self) -> None:
         """Отрисовка змейки на игровом поле."""
-        if self.last is None:
-            for position in self.positions:
-                self.draw_cell(position, self.body_color)
-        else:
-            # Стираем хвост без рамки
-            rect = pygame.Rect(self.last, (GRID_SIZE, GRID_SIZE))
-            pygame.draw.rect(screen, BOARD_BACKGROUND_COLOR, rect)
-            # Рисуем новую голову с рамкой
-            self.draw_cell(self.get_head_position, self.body_color)
+        if self.last is not None:
+            self.draw_cell(self.last, BOARD_BACKGROUND_COLOR, draw_border=False)
+        self.draw_cell(self.get_head_position, self.body_color)
 
     def reset(self) -> None:
         """Сброс в начальное состояние."""
@@ -151,7 +141,8 @@ def main():
     """Основная логика игры."""
     pygame.init()
     snake = Snake()
-    apple = Apple(occupied_positions=snake.positions)
+    apple = Apple()
+    apple.randomize_position(snake.positions)
 
     # Первоначальная отрисовка всего
     screen.fill(BOARD_BACKGROUND_COLOR)
@@ -172,24 +163,17 @@ def main():
         # Проверка столкновения с самим собой
         if snake.get_head_position in snake.positions[1:]:
             snake.reset()
-            apple.occupied_positions = snake.positions
-            apple.randomize_position()
-            # Очищаем экран и перерисовываем всё заново
+            apple.randomize_position(snake.positions)
             screen.fill(BOARD_BACKGROUND_COLOR)
-            snake.draw()
-            apple.draw()
-            pygame.display.update()
             continue
 
         # Проверка съедания яблока
-        if snake.get_head_position == apple.position:
+        elif snake.get_head_position == apple.position:
             snake.length += 1
-            apple.randomize_position()
+            apple.randomize_position(snake.positions)
 
         snake.draw()
         apple.draw()
-        # Сбрасываем last, чтобы не стирать повторно
-        snake.last = None
 
         pygame.display.update()
         clock.tick(SPEED)

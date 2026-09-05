@@ -48,7 +48,7 @@ class GameObject:
 class Apple(GameObject):
     """Класс для объекта яблока, наследуется от GameObject."""
 
-    def __init__(self, occupied_positions=None, position=None, 
+    def __init__(self, occupied_positions=None, position=None,
                  body_color=APPLE_COLOR):
         super().__init__(position, body_color)
         self.occupied_positions = occupied_positions or []
@@ -199,4 +199,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-    
